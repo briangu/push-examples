@@ -1,5 +1,7 @@
-from setuptools import setup
-import pushpy
+#from setuptools import setup
+#import pushpy
+import setuptools
+from distutils.core import setup
 
 description = 'Push examples'
 try:
@@ -20,6 +22,7 @@ setup(
     license='MIT',
     url='https://github.com/briangu/push-examples',
     keywords=['network', 'replication', 'raft', 'synchronization', 'application'],
+    setup_requires=['wheel'],
     classifiers=[
         'Topic :: System :: Networking',
         'Topic :: System :: Distributed Computing',
