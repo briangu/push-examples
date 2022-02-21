@@ -1,5 +1,5 @@
 #from setuptools import setup
-#import pushpy
+import pushpy_examples
 import setuptools
 from distutils.core import setup
 
@@ -12,9 +12,9 @@ except(IOError, ImportError, RuntimeError):
     long_description = description
 
 setup(
-    name='push-examples',
-    packages=['pushpy-examples'],
-    version=pushpy.__version__,
+    name='pushpy_examples',
+    packages=['pushpy_examples'],
+    version=pushpy_examples.__version__,
     description=description,
     long_description=long_description,
     author='Brian Guarraci',
