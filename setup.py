@@ -12,7 +12,7 @@ except(IOError, ImportError, RuntimeError):
     long_description = description
 
 setup(
-    name='pushpy_examples',
+    name='pushpy_examples', 
     packages=['pushpy_examples'],
     version=pushpy_examples.__version__,
     description=description,

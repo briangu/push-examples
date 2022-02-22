@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 from __future__ import print_function
 
 import argparse
@@ -14,29 +14,31 @@ import daemon.pidfile
 
 # adapted from https://raw.githubusercontent.com/ggmartins/dataengbb/master/python/daemon/daemon1
 from pushpy.code_store import ensure_path, load_module
+from pushpy.push_server import main as push_main
 
-PATHCTRL = '/tmp/pushpy'  # path to control files pid and lock
+
+PATHCTRL = '/tmp'  # path to control files pid and lock
 parser = argparse.ArgumentParser(prog="monitor")
 
 sp = parser.add_subparsers()
 sp_start = sp.add_parser('start', help='Starts %(prog)s daemon')
-sp_start.add_argument('name', type=str, help='name of daemon')
-sp_start.add_argument('path', type=str, help='path to daemon main file')
+#sp_start.add_argument('name', type=str, help='name of daemon')
+#sp_start.add_argument('path', type=str, help='path to daemon main file')
 sp_start.add_argument('-v', '--verbose', action='store_true', help='log extra information')
 
 sp_stop = sp.add_parser('stop', help='Stops %(prog)s daemon')
-sp_stop.add_argument('name', type=str, help='name of daemon')
+#sp_stop.add_argument('name', type=str, help='name of daemon')
 
 sp_status = sp.add_parser('status', help='Show the status of %(prog)s daemon')
-sp_status.add_argument('name', type=str, help='name of daemon')
+#sp_status.add_argument('name', type=str, help='name of daemon')
 
 sp_restart = sp.add_parser('restart', help='Restarts %(prog)s daemon')
-sp_restart.add_argument('name', type=str, help='name of daemon')
+#sp_restart.add_argument('name', type=str, help='name of daemon')
 
 sp_debug = sp.add_parser('debug', help='Starts %(prog)s daemon in debug mode')
 sp_debug.add_argument('-v', '--verbose', action='store_true', help='log extra information')
-sp_debug.add_argument('name', type=str, help='name of daemon')
-sp_debug.add_argument('path', type=str, help='path to daemon main file')
+#sp_debug.add_argument('name', type=str, help='name of daemon')
+#sp_debug.add_argument('path', type=str, help='path to daemon main file')
 
 
 class MainCtrl:
@@ -54,9 +56,8 @@ def main_thread(args, mainctrl, log):
         log.info("ARGS:{0}".format(args))
 
     try:
-        with open(main_path, "r") as f:
-            module_name = f.read()
-        load_module_and_run(module_name, log, mainctrl)
+        log.info("starting main")
+        push_main(config_fname='/opt/pushpy/push.conf')
     except KeyboardInterrupt as ke:
         if verbose:
             log.warning("Interrupting...")
@@ -77,9 +78,9 @@ def daemon_start(args):
         # mainctrl.thread_token = "test"
         # print("TOKEN:{0}".format(mainctrl.thread_token))
 
-    if not os.path.exists(main_path):
-        with open(main_path, "w") as f:
-            f.write(args.path)
+#    if not os.path.exists(main_path):
+#        with open(main_path, "w") as f:
+#            f.write(args.path)
 
     print(f"INFO: {args.name} Starting ... {tmp_path}")
     if os.path.exists(pidpath):
@@ -115,8 +116,8 @@ def daemon_restart(args):
     print("INFO: {0} Restarting...".format(args.name))
     daemon_stop(args)
 
-    if not os.path.exists(main_path):
-        raise RuntimeError(f"missing main module path: {main_path}")
+#    if not os.path.exists(main_path):
+#        raise RuntimeError(f"missing main module path: {main_path}")
 
     while os.path.exists(pidpath):
         time.sleep(1)
@@ -129,19 +130,20 @@ def daemon_stop(args):
     if os.path.exists(pidpath):
         with open(pidpath) as pid:
             try:
-                os.kill(int(pid.readline()), signal.SIGINT)
+                os.kill(int(pid.readline()), signal.SIGKILL)
             except ProcessLookupError as ple:
-                os.remove(pidpath)
                 print("ERROR ProcessLookupError: {0}".format(ple))
+            finally:
+                os.remove(pidpath)
     else:
         print("ERROR: process isn't running (according to the absence of {0}).".format(pidpath))
 
 
 def daemon_debug(args):
     print("INFO: running in debug mode.")
-    if not os.path.exists(main_path):
-        with open(main_path, "w") as f:
-            f.write(args.path)
+#    if not os.path.exists(main_path):
+#        with open(main_path, "w") as f:
+#            f.write(args.path)
     log = logging.getLogger(__name__)
     mainctrl = MainCtrl()
     main_thread(args, mainctrl, log)
@@ -162,15 +164,16 @@ sp_restart.set_defaults(callback=daemon_restart)
 sp_debug.set_defaults(callback=daemon_debug)
 
 args = parser.parse_args()
+args.name = 'daemon'
 
-tmp_path = os.path.join(PATHCTRL, args.name)
+tmp_path = os.path.join(PATHCTRL, 'pushpy')
 ensure_path(tmp_path)
 
 logpath = os.path.join(tmp_path, args.name + ".log")
 log_stdout = os.path.join(tmp_path, args.name + ".out")
 log_stderr = os.path.join(tmp_path, args.name + ".err")
 pidpath = os.path.join(tmp_path, args.name + ".pid")
-main_path = os.path.join(tmp_path, args.name + ".main.path")
+#main_path = os.path.join(tmp_path, args.name + ".main.path")
 
 if hasattr(args, 'callback'):
     args.callback(args)
