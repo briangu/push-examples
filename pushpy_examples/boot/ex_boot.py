@@ -65,8 +65,10 @@ class MyRouter(Router):
         self.prefix = prefix or '/web'
 
     def find_handler(self, request, **kwargs):
+        host = request.headers.get("Host")
+
         try:
-            handler = load_src(self.store, f"{self.prefix}{request.path}") or Handle404
+            handler = load_src(self.store, f"{self.prefix}/{host}{request.path}") or Handle404
         except Exception as e:
             import traceback
             traceback.print_exc()
